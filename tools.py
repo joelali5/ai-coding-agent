@@ -21,6 +21,3 @@ def read_file(path: str) -> str:
     with file_path.open("r") as f:
         return f.read()
 
-
-# print(read_file("agent.py"))
-print(read_file("../test-proj"))
