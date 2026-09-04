@@ -40,6 +40,3 @@ def run_python_file(path: str) -> dict:
         "stderr": result.stderr,
         "returncode": result.returncode
     }
-
-
-print(run_python_file("hello.py"))

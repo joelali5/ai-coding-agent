@@ -7,6 +7,15 @@ load_dotenv()
 
 client = OpenAI()
 
+user_request = input("What would you like me to do? ")
+
+tool_registry = {
+    "list_files": list_files,
+    "read_file": read_file,
+    "write_file": write_file,
+    "run_python_file": run_python_file
+}
+
 tools = [
     {
         "name": "list_files",
@@ -79,7 +88,7 @@ tools = [
 
 response = client.responses.create(
     model="gpt-5.6-luna",
-    input="Create a Python file called self_test.py that prints the result of adding 5 and 7. Run the file to verify it works. If execution fails, inspect the error, fix the code, and run it again until it succeeds.",
+    input=user_request,
     tools=tools
 )
 
@@ -98,19 +107,9 @@ while True:
 
     for tool_call in tool_calls:
         arguments = json.loads(tool_call.arguments)
-        path = arguments["path"]
+        tool_function = tool_registry[tool_call.name]
 
-        # Execute the correct tool call
-        if tool_call.name == "list_files":
-            result = list_files(path)
-            # Add its result to the tool_outputs list
-        elif tool_call.name == "read_file":
-            result = read_file(path)
-        elif tool_call.name == "write_file":
-            content = arguments["content"]
-            result = write_file(path, content)
-        elif tool_call.name == "run_python_file":
-            result = run_python_file(path)
+        result = tool_function(**arguments)
 
         tool_outputs.append({
             "type": "function_call_output",
