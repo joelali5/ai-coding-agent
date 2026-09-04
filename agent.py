@@ -1,11 +1,20 @@
 from dotenv import load_dotenv
 from openai import OpenAI
-from tools import list_files, read_file
+from tools import list_files, read_file, write_file, run_python_file
 import json
 
 load_dotenv()
 
 client = OpenAI()
+
+user_request = input("What would you like me to do? ")
+
+tool_registry = {
+    "list_files": list_files,
+    "read_file": read_file,
+    "write_file": write_file,
+    "run_python_file": run_python_file
+}
 
 tools = [
     {
@@ -39,12 +48,47 @@ tools = [
             "required": ["path"],
             "additionalProperties": False
         }
+    },
+    {
+    "name": "write_file",
+    "type": "function",
+    "description": "Write content to a file inside the project directory.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "The file path to write to."
+            },
+            "content": {
+                "type": "string",
+                "description": "The content to write to the file."
+            }
+        },
+        "required": ["path", "content"],
+        "additionalProperties": False
     }
-]
+},
+    {
+    "name": "run_python_file",
+    "type": "function",
+    "description": "Run a Python file and return its output.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "The file path to run."
+            }
+        },
+        "required": ["path"],
+        "additionalProperties": False
+    }
+}]
 
 response = client.responses.create(
     model="gpt-5.6-luna",
-    input="Inspect my project and explain what this application currently does. Read the relevant files before answering.",
+    input=user_request,
     tools=tools
 )
 
@@ -62,14 +106,11 @@ while True:
     tool_outputs = []
 
     for tool_call in tool_calls:
-        path = json.loads(tool_call.arguments)["path"]
-        # Execute the correct tool call
-        if tool_call.name == "list_files":
-            result = list_files(path)
-            # Add its result to the tool_outputs list
-        elif tool_call.name == "read_file":
-            result = read_file(path)
-            
+        arguments = json.loads(tool_call.arguments)
+        tool_function = tool_registry[tool_call.name]
+
+        result = tool_function(**arguments)
+
         tool_outputs.append({
             "type": "function_call_output",
             "call_id": tool_call.call_id,

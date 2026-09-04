@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 PROJECT_ROOT = Path.cwd()
 
@@ -21,3 +22,21 @@ def read_file(path: str) -> str:
     with file_path.open("r") as f:
         return f.read()
 
+
+def write_file(path: str, content: str) -> str:
+    file_path = get_safe_path(path)
+    with file_path.open("w") as f:
+        f.write(content)
+    return f"Successfully wrote to {file_path}"
+
+def run_python_file(path: str) -> dict:
+    file_path = get_safe_path(path)
+    if file_path.suffix != ".py":
+        raise ValueError("Only Python files can be executed.")
+    result = subprocess.run(["python", str(file_path)], capture_output=True, text=True)
+
+    return {
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "returncode": result.returncode
+    }
