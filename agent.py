@@ -7,6 +7,22 @@ load_dotenv()
 
 client = OpenAI()
 
+AGENT_INSTRUCTIONS = """
+You are an AI coding agent working inside a local project.
+
+You can inspect files, read files, write files, and execute Python files.
+
+Guidelines:
+
+- Understand the user's request before taking action.
+- Inspect relevant files when necessary to understand the existing project or safely complete a task.
+- Do not inspect unrelated files unnecessarily.
+- Make the smallest appropriate changes.
+- Verify code changes by running relevant Python files when possible.
+- If a tool fails, examine the error and decide whether another action can resolve the problem.
+- Do not claim that a task succeeded unless you have sufficient evidence.
+"""
+
 user_request = input("What would you like me to do? ")
 
 tool_registry = {
@@ -88,6 +104,7 @@ tools = [
 
 response = client.responses.create(
     model="gpt-5.6-luna",
+    instructions=AGENT_INSTRUCTIONS,
     input=user_request,
     tools=tools
 )
@@ -130,6 +147,7 @@ while iteration < max_iterations:
 
     response = client.responses.create(
         model="gpt-5.6-luna",
+        instructions=AGENT_INSTRUCTIONS,
         previous_response_id=response.id,
         input=tool_outputs,
         tools=tools
