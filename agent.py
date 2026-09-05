@@ -92,7 +92,11 @@ response = client.responses.create(
     tools=tools
 )
 
-while True:
+max_iterations = 10
+iteration = 0
+
+while iteration < max_iterations:
+    iteration += 1
     tool_calls = []
 
     for item in response.output:
@@ -106,10 +110,17 @@ while True:
     tool_outputs = []
 
     for tool_call in tool_calls:
-        arguments = json.loads(tool_call.arguments)
-        tool_function = tool_registry[tool_call.name]
+        try:
+            arguments = json.loads(tool_call.arguments)
 
-        result = tool_function(**arguments)
+            tool_function = tool_registry[tool_call.name]
+
+            result = tool_function(**arguments)
+    
+        except Exception as error:
+            result = {
+                "error": str(error)
+            }
 
         tool_outputs.append({
             "type": "function_call_output",
@@ -123,3 +134,5 @@ while True:
         input=tool_outputs,
         tools=tools
     )
+else:
+    print("Agent stopped: maximum number of iterations reached.")
