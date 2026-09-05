@@ -33,13 +33,18 @@ def run_python_file(path: str) -> dict:
     file_path = get_safe_path(path)
     if file_path.suffix != ".py":
         raise ValueError("Only Python files can be executed.")
-    result = subprocess.run(["python", str(file_path)], capture_output=True, text=True)
 
-    return {
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-        "returncode": result.returncode
-    }
+    try:
+        result = subprocess.run(["python", str(file_path)], capture_output=True, text=True, timeout=5)
+        
+        return {
+            "stdout": result.stdout,
+            "stderr": result.stderr,
+            "returncode": result.returncode
+        }
+
+    except subprocess.TimeoutExpired:
+        return {"error": "Python execution timed out after 5 seconds."}
 
 def replace_in_file(path: str, old_text: str, new_text: str ) -> str:
     file_path = get_safe_path(path)
