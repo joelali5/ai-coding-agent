@@ -40,3 +40,21 @@ def run_python_file(path: str) -> dict:
         "stderr": result.stderr,
         "returncode": result.returncode
     }
+
+def replace_in_file(path: str, old_text: str, new_text: str ) -> str:
+    file_path = get_safe_path(path)
+    with file_path.open("r") as f:
+        content = f.read()
+
+    occurrences = content.count(old_text)
+
+    if occurrences == 0:
+        raise ValueError(f"{old_text} not found in {file_path}")
+    elif occurrences > 1:
+        raise ValueError(f"Only a single occurence of {old_text} can be replaced at a time.")
+
+    content = content.replace(old_text, new_text)
+    with file_path.open("w") as f:
+        f.write(content)
+
+    return f"Successfully replaced {old_text} with {new_text} in {file_path}"

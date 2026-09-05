@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from openai import OpenAI
-from tools import list_files, read_file, write_file, run_python_file
+from tools import list_files, read_file, write_file, run_python_file, replace_in_file
 import json
 
 load_dotenv()
@@ -29,7 +29,8 @@ tool_registry = {
     "list_files": list_files,
     "read_file": read_file,
     "write_file": write_file,
-    "run_python_file": run_python_file
+    "run_python_file": run_python_file,
+    "replace_in_file": replace_in_file
 }
 
 tools = [
@@ -84,23 +85,52 @@ tools = [
         "required": ["path", "content"],
         "additionalProperties": False
     }
-},
+    },
     {
     "name": "run_python_file",
     "type": "function",
-    "description": "Run a Python file and return its output.",
+    "description": (
+        "Safely replace exactly one occurrence of old_text "
+        "with new_text in a file. The operation fails if "
+        "old_text occurs zero times or more than once."
+    ),
     "parameters": {
         "type": "object",
         "properties": {
             "path": {
                 "type": "string",
-                "description": "The file path to run."
+                "description": "The file path containing the text to replace."
             }
         },
         "required": ["path"],
         "additionalProperties": False
     }
-}]
+    },
+    {
+        "name": "replace_in_file",
+        "type": "function",
+        "description": "Replace a text in a file.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "The file path containing the text to replace."
+                },
+                "old_text": {
+                    "type": "string",
+                    "description": "The exact existing text to replace."
+                },
+                "new_text": {
+                    "type": "string",
+                    "description": "The new text that will replace old_text."
+                }
+            },
+            "required": ["path", "old_text", "new_text"],
+            "additionalProperties": False
+        }
+    }
+]
 
 response = client.responses.create(
     model="gpt-5.6-luna",

@@ -1,2 +1,2 @@
-result = 20 * 3
+result = 15 * 4
 print(result)
